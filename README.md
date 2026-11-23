@@ -4,7 +4,7 @@ Sistema de gestión y control de inventario para el FabLab de la Universidad Fra
 
 **Seminario Integrador II** — UFPS
 
-> **Documentación técnica, documento académico, presentaciones y datos de migración:**
+> **Documentación técnica:** [`fablab-inventario/docs/`](fablab-inventario/docs/README.md). **Datos de migración:**
 > en [Drive](https://drive.google.com/drive/folders/1vqcwbiDax6uhSEYc_4Y-DvxlqBvvPo9J) (cuenta UFPS). La app tiene su propio README:
 > [`fablab-inventario/README.md`](fablab-inventario/README.md).
 
@@ -107,13 +107,13 @@ Presiona `a` (Android), `i` (iOS) o `w` (web). En móvil: escanear QR de Expo Go
 | POST | `/api/import/elementos` | Importar un CSV o un libro de Excel (solo agrega códigos nuevos) |
 
 Contrato completo (auth, CORS, gzip, códigos de estado y ejemplos) en
-`docs/api.md` ([Drive](https://drive.google.com/drive/folders/1vqcwbiDax6uhSEYc_4Y-DvxlqBvvPo9J)).
+[`docs/api.md`](fablab-inventario/docs/api.md).
 
 Los errores de cliente responden con su código real: `400` campo inválido o
 faltante, `401` escritura sin token, `404` id/código inexistente, `409` conflicto
 (p. ej. trasladar a la sala en la que ya está), `429` demasiadas escrituras.
 `500` queda para fallos del servidor o de la base. Cada escritura queda registrada
-en la tabla `auditoria` (`docs/auditoria.md` en [Drive](https://drive.google.com/drive/folders/1vqcwbiDax6uhSEYc_4Y-DvxlqBvvPo9J)).
+en la tabla `auditoria` ([`docs/auditoria.md`](fablab-inventario/docs/auditoria.md)).
 
 ## Estructura del proyecto
 
@@ -195,14 +195,14 @@ npm run asignar:codigos         # Dry-run: códigos para elementos sin código (
 ```
 
 El mismo gate corre en cada push y PR (`.github/workflows/ci.yml`). Qué cubre
-cada prueba en `docs/qa.md` ([Drive](https://drive.google.com/drive/folders/1vqcwbiDax6uhSEYc_4Y-DvxlqBvvPo9J)).
+cada prueba en [`docs/qa.md`](fablab-inventario/docs/qa.md).
 
 ## Variables de entorno
 
 | Variable | Default | Descripción |
 |---|---|---|
 | `MYSQL_HOST` | `localhost` | Host MySQL |
-| `MYSQL_PORT` | `13306` | Puerto (el `docker-compose.yml` de la raíz publica 3306: ver `docs/base-de-datos.md` en Drive) |
+| `MYSQL_PORT` | `13306` | Puerto (el `docker-compose.yml` de la raíz publica 3306: ver [`docs/base-de-datos.md`](fablab-inventario/docs/base-de-datos.md)) |
 | `MYSQL_USER` | `root` | Usuario |
 | `MYSQL_PASSWORD` | `fablab` | Contraseña |
 | `MYSQL_DATABASE` | `fablab` | Base de datos |
