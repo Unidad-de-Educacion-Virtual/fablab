@@ -5,8 +5,8 @@
 // Ahora el conteo va en una píldora a la derecha, la fila lleva un chevron y el
 // borde se enciende al pasar el mouse o al pulsar.
 import { router, useFocusEffect } from 'expo-router';
-import { useCallback, useState } from 'react';
-import { Pressable, ScrollView, StyleSheet, View } from 'react-native';
+import { useCallback, useEffect, useState } from 'react';
+import { Animated, Easing, Platform, Pressable, ScrollView, StyleSheet, View } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import Svg, { Path } from 'react-native-svg';
 
@@ -27,13 +27,25 @@ export default function InventoryScreen() {
   // salas cargadas, un resultado vacío tras terminar la carga es un fallo.
   const [cargando, setCargando] = useState(true);
   const [refrescando, setRefrescando] = useState(false);
+  // Confirmación breve tras refrescar: sin ella, si la red responde rápido el botón no parece hacer nada.
+  const [actualizado, setActualizado] = useState(false);
+  // El ↻ gira mientras se recarga y da una vuelta al terminar.
+  const [giro] = useState(() => new Animated.Value(0));
+  useEffect(() => {
+    if (!refrescando) return;
+    giro.setValue(0);
+    const anim = Animated.loop(Animated.timing(giro, { toValue: 1, duration: 800, easing: Easing.linear, useNativeDriver: Platform.OS !== 'web' }));
+    anim.start();
+    return () => { anim.stop(); Animated.timing(giro, { toValue: 1, duration: 300, easing: Easing.out(Easing.quad), useNativeDriver: Platform.OS !== 'web' }).start(); };
+  }, [refrescando, giro]);
+  const rotacion = giro.interpolate({ inputRange: [0, 1], outputRange: ['0deg', '360deg'] });
   // Id de la tarjeta bajo el mouse (solo web): el resaltado se hace con estado
   // para no depender del estado `hovered` del Pressable, que no está tipado.
   const [resaltada, setResaltada] = useState<number | null>(null);
 
   const cargar = useCallback(() => {
     setCargando(true);
-    listarSalas().then((lista) => {
+    return listarSalas().then((lista) => {
       setSalas(lista);
       setCargando(false);
     });
@@ -48,7 +60,9 @@ export default function InventoryScreen() {
     setRefrescando(true);
     try {
       await resetCache();
-      cargar();
+      await cargar();
+      setActualizado(true);
+      setTimeout(() => setActualizado(false), 2000);
     } finally {
       setRefrescando(false);
     }
@@ -65,9 +79,11 @@ export default function InventoryScreen() {
           <View style={styles.titleRow}>
             <ThemedText type="title" style={[styles.title, { color: theme.accent }]}>Inventario</ThemedText>
             {salas.length > 0 && (
-              <Pressable accessibilityRole="button" disabled={refrescando} onPress={refrescar} hitSlop={8}>
+              <Pressable accessibilityRole="button" accessibilityState={{ busy: refrescando }} disabled={refrescando} onPress={refrescar} hitSlop={8}
+                style={({ pressed }) => [styles.refreshButton, { borderColor: theme.accent }, (pressed || refrescando) && { opacity: 0.6 }]}>
+                <Animated.Text style={[styles.refreshLabel, { color: theme.accent, transform: [{ rotate: rotacion }] }]}>↻</Animated.Text>
                 <ThemedText style={[styles.refreshLabel, { color: theme.accent }]}>
-                  {refrescando ? 'Actualizando…' : 'Actualizar'}
+                  {refrescando ? 'Actualizando…' : actualizado ? 'Actualizado ✓' : 'Actualizar'}
                 </ThemedText>
               </Pressable>
             )}
@@ -162,6 +178,7 @@ const styles = StyleSheet.create({
   contentEscritorio: { maxWidth: MaxContentWidthEscritorio },
   titleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: Spacing.two, marginTop: Spacing.six },
   title: { color: RojoTexto },
+  refreshButton: { flexDirection: 'row', alignItems: 'center', gap: Spacing.one, borderWidth: 1, borderRadius: 999, paddingVertical: 4, paddingHorizontal: Spacing.two },
   refreshLabel: { color: RojoTexto, fontWeight: '700', fontSize: 14 },
   intro: { marginTop: Spacing.one, lineHeight: 21 },
   roomList: { gap: Spacing.two + Spacing.one, marginTop: Spacing.five, width: '100%' },

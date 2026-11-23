@@ -40,5 +40,3 @@ defecto** y piden una opción explícita para aplicar. Antes de tocar producció
   TypeScript de `src/` con el alias `@/`.
 - `pdf.mjs`: lector mínimo de PDF que usa `verificar-impresion.mjs`.
 - `demo-foto/`: imágenes de la prueba `fotos:demo`.
-- `reset-project.js`: de la plantilla de Expo. **No usar:** reemplaza `src/app` por
-  una app vacía.

@@ -24,29 +24,12 @@ navegador ──► web (nginx, puerto WEB_PORT) ──/api──► api (Node) 
 
 ## Instalación
 
-Desde la carpeta `fablab-inventario/`:
+Desde la carpeta `fablab-inventario/`, **antes del primer arranque**, con los dos
+archivos de la carpeta `fablab-inventario` en Drive:
 
-```bash
-cp docker/.env.example docker/.env
-```
-
-Editar `docker/.env` y poner valores largos y aleatorios (por ejemplo `openssl rand -hex 24`)
-en `MYSQL_ROOT_PASSWORD`, `MYSQL_APP_PASSWORD` y `API_TOKEN`, y el secreto de las
-sesiones `SESION_SECRETO` (`openssl rand -hex 32`).
-
-Además hay que **definir la cuenta con la que se entra a la app**. La clave no se
-guarda en claro: se guarda su hash scrypt en `CUENTA_CLAVE_HASH`, que se genera
-una sola vez (el comando no deja la clave en el historial del shell):
-
-```bash
-read -s -p "Clave: " CLAVE; echo
-CLAVE="$CLAVE" node -e "import('./server/sesion.mjs').then(m=>console.log(m.crearHashClave(process.env.CLAVE)))"
-unset CLAVE
-```
-
-`CUENTA_USUARIO`, `CUENTA_CLAVE_HASH` y `SESION_SECRETO` son **obligatorios**:
-`compose.yml` los exige (`:?`) y, sin ellos, el contenedor de la API no arranca —
-así no puede quedar un sistema sin forma de entrar. Ese archivo no se versiona.
+1. `fablab-docker.env` → copiarlo como `docker/.env` (ya trae todos los valores).
+2. `fablab-aiven-2026-11-22.sql` (copia completa de producción: inventario, fotos,
+   usuarios y roles) → reemplazar con él `docker/init/01-inventario.sql`.
 
 ```bash
 docker compose -f docker/compose.yml --env-file docker/.env up -d
@@ -54,10 +37,13 @@ docker compose -f docker/compose.yml --env-file docker/.env up -d
 
 Descarga las imágenes publicadas (`ghcr.io/stevencardenas-dev/fablab-api` y
 `fablab-web`, etiqueta `estable`). Para compilarlas aquí desde el código, agregar `--build`.
+La primera carga de la base tarda unos minutos y solo ocurre con el volumen vacío. Si
+ya se arrancó con el archivo viejo: `docker compose -f docker/compose.yml --env-file docker/.env down -v`
+(borra la base local) y volver a subir.
 
-La primera vez la base se crea con el inventario de `docker/init/01-inventario.sql`
-(1 389 elementos, 12 salas, 2 edificios, igual a producción al 2026-10-28). Eso
-solo ocurre con el volumen vacío.
+La clave de la cuenta principal (`laboratorio`) la entrega el equipo aparte; en
+`docker/.env` solo está su hash. Para instalar sin los archivos de Drive, partir de
+`docker/.env.example`, que explica cómo generar cada valor.
 
 ## Comprobación
 
@@ -118,8 +104,8 @@ versión con la que se instaló.
 - **Sin sesión no se ve nada:** la app abre en una pantalla de entrada y la API rechaza
   (`401`) cualquier petición sin credencial, lecturas incluidas, salvo `/health` y el
   login. La web ya no lleva ningún token.
-- **La cuenta es una sola y compartida:** quien tenga la clave puede leer y modificar. No
-  distingue personas ni hay un acceso de solo lectura. Publicar la app solo en la red del
+- **Cuentas:** la principal (`docker/.env`) entra con todos los permisos; las demás
+  personas y sus roles se gestionan desde la app (vienen en la copia de la base). Publicar la app solo en la red del
   campus (o VPN) sigue siendo recomendable.
 - **Inicio de sesión:** la app pide la cuenta del laboratorio para entrar. Su usuario, el hash de su clave y `SESION_SECRETO` van en `docker/.env` (ver `.env.example`). La web ya no lleva ningún token: el de herramientas (`API_TOKEN`) solo vive en el servidor.
 - **Cambiar la clave de la cuenta:** generar otro hash (ver `.env.example`), cambiar `CUENTA_CLAVE_HASH` y reiniciar la API (`up -d api`). Las sesiones abiertas siguen válidas hasta vencer (12 h); para cerrarlas todas, cambiar también `SESION_SECRETO`.

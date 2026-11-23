@@ -13,7 +13,8 @@ const PASO = 0.05; // cada − / + o rueda: 5 puntos
 const clamp = (v: number, min: number, max: number) => Math.min(Math.max(v, min), max);
 
 // encuadre: rectángulo recortado en fracciones del original [x, y, ancho, alto].
-export type Recorte = { uri: string; ancho: number; alto: number; encuadre: number[] };
+// encuadre ausente = la foto se giró: el resultado pasa a ser el original nuevo.
+export type Recorte = { uri: string; ancho: number; alto: number; encuadre?: number[] };
 
 export function FotoEncuadre({ uri, onCancelar, onGuardar }: {
   uri: string;
@@ -29,6 +30,7 @@ export function FotoEncuadre({ uri, onCancelar, onGuardar }: {
   const [pos, setPos] = useState({ x: 0, y: 0 }); // esquina sup. izq. de la ventana, en px de la imagen
   const [error, setError] = useState<string | null>(null);
   const [recortando, setRecortando] = useState(false);
+  const [giro, setGiro] = useState(0); // grados acumulados, de 90 en 90
 
   useEffect(() => {
     if (Platform.OS !== 'web') return;
@@ -99,6 +101,42 @@ export function FotoEncuadre({ uri, onCancelar, onGuardar }: {
   const fracciones = () => dims
     ? [pos.x / dims.w, pos.y / dims.h, ventana.w / dims.w, ventana.h / dims.h] : [0, 0, 1, 1];
 
+  // Gira 90° a la derecha la imagen fuente; el encuadre se arma sobre la imagen ya girada.
+  async function girar() {
+    if (!src || !dims) return;
+    setRecortando(true);
+    try {
+      let nueva: string;
+      if (Platform.OS === 'web') {
+        const img = new window.Image();
+        img.src = src;
+        await img.decode();
+        const c = document.createElement('canvas');
+        c.width = img.naturalHeight; c.height = img.naturalWidth;
+        const ctx = c.getContext('2d')!;
+        ctx.translate(c.width, 0);
+        ctx.rotate(Math.PI / 2);
+        ctx.drawImage(img, 0, 0);
+        const blob = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.92));
+        if (!blob) throw new Error('toBlob');
+        nueva = URL.createObjectURL(blob); // ponytail: no se revoca; son pocas y mueren con el editor
+      } else {
+        const ref = await ImageManipulator.manipulate(src).rotate(90).renderAsync();
+        nueva = (await ref.saveAsync({ compress: 1 })).uri;
+      }
+      pendiente.current = null;
+      centro.current = null;
+      setDims(null);
+      setZoom(1);
+      setSrc(nueva);
+      setGiro((g) => (g + 90) % 360);
+    } catch {
+      setError('No se pudo girar la foto.');
+    } finally {
+      setRecortando(false);
+    }
+  }
+
   async function guardar() {
     if (!src || !dims) return;
     setRecortando(true);
@@ -115,7 +153,7 @@ export function FotoEncuadre({ uri, onCancelar, onGuardar }: {
         ctx.drawImage(img, -pos.x, -pos.y);
         const blob = await new Promise<Blob | null>((r) => c.toBlob(r, 'image/jpeg', 0.92));
         if (!blob) throw new Error('toBlob');
-        onGuardar({ uri: URL.createObjectURL(blob), ancho: c.width, alto: c.height, encuadre: fracciones() });
+        onGuardar({ uri: URL.createObjectURL(blob), ancho: c.width, alto: c.height, encuadre: giro ? undefined : fracciones() });
         return;
       }
       const ref = await ImageManipulator.manipulate(src).crop({
@@ -123,7 +161,7 @@ export function FotoEncuadre({ uri, onCancelar, onGuardar }: {
         width: Math.round(ventana.w), height: Math.round(ventana.h),
       }).renderAsync();
       const res = await ref.saveAsync({ compress: 1 });
-      onGuardar({ uri: res.uri, ancho: res.width, alto: res.height, encuadre: fracciones() });
+      onGuardar({ uri: res.uri, ancho: res.width, alto: res.height, encuadre: giro ? undefined : fracciones() });
     } catch {
       setError('No se pudo recortar la foto.');
       setRecortando(false);
@@ -173,6 +211,10 @@ export function FotoEncuadre({ uri, onCancelar, onGuardar }: {
         <Pressable accessibilityRole="button" onPress={() => cambiarZoom(1)} style={styles.boton}>
           <ThemedText style={styles.etiqueta}>Llenar</ThemedText>
         </Pressable>
+        <Pressable accessibilityRole="button" accessibilityLabel="Girar 90 grados a la derecha" disabled={!dims || recortando}
+          onPress={girar} style={[styles.boton, (!dims || recortando) && { opacity: 0.4 }]}>
+          <ThemedText style={styles.etiqueta}>Girar ↻</ThemedText>
+        </Pressable>
         {entera < 0.99 && (
           <Pressable accessibilityRole="button" onPress={() => cambiarZoom(entera)} style={styles.boton}>
             <ThemedText style={styles.etiqueta}>Entera</ThemedText>
@@ -183,7 +225,7 @@ export function FotoEncuadre({ uri, onCancelar, onGuardar }: {
       <View style={styles.fila}>
         <Pressable accessibilityRole="button" disabled={!dims || recortando} onPress={guardar}
           style={[styles.boton, styles.botonActivo, (!dims || recortando) && { opacity: 0.5 }]}>
-          <ThemedText style={[styles.etiqueta, styles.etiquetaActiva]}>Guardar encuadre</ThemedText>
+          <ThemedText style={[styles.etiqueta, styles.etiquetaActiva]}>{giro ? 'Guardar foto' : 'Guardar encuadre'}</ThemedText>
         </Pressable>
         <Pressable accessibilityRole="button" disabled={recortando} onPress={onCancelar} style={styles.boton}>
           <ThemedText style={styles.etiqueta}>Cancelar</ThemedText>
