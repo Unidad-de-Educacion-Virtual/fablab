@@ -24,7 +24,7 @@ jobs:
       run:
         working-directory: fablab-inventario
     env:
-      REG: ghcr.io/stevencardenas-dev
+      REG: ghcr.io/alvaro-portillo
       VERSION: ${{ github.ref_name }}
     steps:
       - uses: actions/checkout@v4

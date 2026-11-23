@@ -101,9 +101,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     flexGrow: 1,
     gap: Spacing.two,
-    maxWidth: MaxContentWidth,
+    // Mismo ancho útil que el contenido (maxWidth menos su paddingHorizontal).
+    maxWidth: MaxContentWidth - 2 * Spacing.four,
   },
-  innerContainerEscritorio: { maxWidth: MaxContentWidthEscritorio },
+  innerContainerEscritorio: { maxWidth: MaxContentWidthEscritorio - 2 * Spacing.four },
   brandText: {
     marginRight: 'auto',
   },

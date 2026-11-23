@@ -33,7 +33,7 @@ services:
       start_period: 300s
 
   api:
-    image: ghcr.io/stevencardenas-dev/fablab-api:${APP_VERSION:-estable}
+    image: ghcr.io/alvaro-portillo/fablab-api:${APP_VERSION:-estable}
     build:
       context: ..
       dockerfile: docker/api/Dockerfile
@@ -70,7 +70,7 @@ services:
     # Sin "ports": la API solo se alcanza a través de web (/api)
 
   web:
-    image: ghcr.io/stevencardenas-dev/fablab-web:${APP_VERSION:-estable}
+    image: ghcr.io/alvaro-portillo/fablab-web:${APP_VERSION:-estable}
     build:
       context: ..
       dockerfile: docker/web/Dockerfile

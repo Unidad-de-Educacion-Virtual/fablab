@@ -35,7 +35,7 @@ archivos de la carpeta `fablab-inventario` en Drive:
 docker compose -f docker/compose.yml --env-file docker/.env up -d
 ```
 
-Descarga las imágenes publicadas (`ghcr.io/stevencardenas-dev/fablab-api` y
+Descarga las imágenes publicadas (`ghcr.io/alvaro-portillo/fablab-api` y
 `fablab-web`, etiqueta `estable`). Para compilarlas aquí desde el código, agregar `--build`.
 La primera carga de la base tarda unos minutos y solo ocurre con el volumen vacío. Si
 ya se arrancó con el archivo viejo: `docker compose -f docker/compose.yml --env-file docker/.env down -v`

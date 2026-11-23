@@ -156,7 +156,7 @@ Cada decisión con su motivo (y el costo que se aceptó):
 
 ## Dónde vive la verdad
 
-- **Fuente de verdad**: este monorepo (`git@github.com:stevencardenas-dev/fablab.git`,
+- **Fuente de verdad**: este monorepo (`git@github.com:alvaro-portillo/fablab.git`,
   rama `main`).
 - **Artefactos de despliegue**: dos repos espejo que se regeneran con
   `npm run sync:deploy` → `Masterkillerr/fablab-api` (privado, lo consume Render)

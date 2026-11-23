@@ -5,7 +5,7 @@ FROM node:20-bookworm-slim
 ARG APP_VERSION=dev
 LABEL org.opencontainers.image.title="fablab-api" \
       org.opencontainers.image.version="$APP_VERSION" \
-      org.opencontainers.image.source="https://github.com/stevencardenas-dev/fablab" \
+      org.opencontainers.image.source="https://github.com/alvaro-portillo/fablab" \
       org.opencontainers.image.licenses="MIT"
 
 ENV NODE_ENV=production \
